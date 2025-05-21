@@ -1,4 +1,7 @@
 from mage_ai.data_preparation.decorators import data_loader
+from mage_ai.data_preparation.shared.secrets import get_secret_value
+
+from pyvirtualdisplay import Display
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,6 +15,13 @@ def load_data(*args, **kwargs):
     def realizar_acciones_bancarias(url_banco_func, usuario_func, contrasena_func, pasos_navegacion_func, directorio_descargas_func):
 
         estado_final = "Error desconocido" # Para rastrear el resultado
+
+        # Iniciar la pantalla virtual
+        print("Iniciando pantalla virtual Xvfb...")
+        display = Display(visible=0, size=(1920, 1080)) # visible=0 significa que no se muestra
+        display.start()
+        print("Pantalla virtual iniciada.")
+
         driver_func = None
         try:
             print("Intentando iniciar con undetected_chromedriver...")
@@ -34,6 +44,7 @@ def load_data(*args, **kwargs):
             options_func.add_argument(f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36')
             options_func.add_argument('--no-sandbox')
             options_func.add_argument('--disable-dev-shm-usage')
+            options_func.add_argument('--window-size=1920,1080')
             options_func.add_argument("--disable-blink-features=AutomationControlled")
 
             driver_func = uc.Chrome(options=options_func, use_subprocess=True, enable_cdp_events=False)
@@ -48,6 +59,7 @@ def load_data(*args, **kwargs):
                 print(f"\nEjecutando paso {i_func+1}: {paso_func.get('descripcion', paso_func['accion'])}")
                 # Pequeña espera para estabilizar, especialmente antes de cambiar de contexto o hacer clic
                 time.sleep(paso_func.get('pre_espera_segundos', 1))
+
 
                 try:
                     if paso_func['accion'] == 'escribir':
@@ -140,23 +152,29 @@ def load_data(*args, **kwargs):
             estado_final = "Proceso completado (o al menos todos los pasos ejecutados)."
             print(f"\n{estado_final}")
 
-        except Exception as e_general_func:
-            print(f"Ocurrió un error general en la función principal: {e_general_func}")
-            if driver_func: driver_func.save_screenshot('error_general_main_function.png')
-            estado_final = f"Error general: {str(e_general_func)[:100]}"
+
+        except Exception as e:
+            print(f"Ocurrió un error: {e}")
+            import traceback
+            traceback.print_exc()
+            if driver:
+                driver.save_screenshot("error_xvfb_uc_test.png")
+                print("Screenshot de error guardado en error_xvfb_uc_test.png")
         finally:
-            if driver_func:
-                driver_func.quit()
-                print("Navegador cerrado.")
+            if driver:
+                driver.quit()
+                print("Driver cerrado.")
+            display.stop()
+            print("Pantalla virtual Xvfb detenida.")
         return estado_final
 
 
     if __name__ == "__main__":
         directorio_descargas = os.path.join(os.getcwd(), "descargas_banco")
 
-        url_login_banco = get_secret_value('url_bci')
+        url_login_banco = get_secret_value('bci_url')
         mi_rut = get_secret_value('rut')
-        mi_clave = get_secret_value('clave_bci')
+        mi_clave = get_secret_value('bci_clave')
 
         pasos_para_llegar_a_pagina_objetivo = [
             # Login
