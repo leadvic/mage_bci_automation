@@ -1,4 +1,5 @@
-from mage_ai.data_preparation.decorators import data_loader
+if 'data_loader' not in globals():
+    from mage_ai.data_preparation.decorators import data_loader
 from mage_ai.data_preparation.shared.secrets import get_secret_value
 
 from pyvirtualdisplay import Display
@@ -157,91 +158,90 @@ def load_data(*args, **kwargs):
             print(f"Ocurrió un error: {e}")
             import traceback
             traceback.print_exc()
-            if driver:
-                driver.save_screenshot("error_xvfb_uc_test.png")
+            if driver_func:
+                driver_func.save_screenshot("error_xvfb_uc_test.png")
                 print("Screenshot de error guardado en error_xvfb_uc_test.png")
         finally:
-            if driver:
-                driver.quit()
+            if driver_func:
+                driver_func.quit()
                 print("Driver cerrado.")
             display.stop()
             print("Pantalla virtual Xvfb detenida.")
         return estado_final
 
 
-    if __name__ == "__main__":
-        directorio_descargas = os.path.join(os.getcwd(), "descargas_banco")
+    directorio_descargas = os.path.join("/home/src/magic","staging")
 
-        url_login_banco = get_secret_value('bci_url')
-        mi_rut = get_secret_value('rut')
-        mi_clave = get_secret_value('bci_clave')
+    url_login_banco = get_secret_value('bci_url')
+    mi_rut = get_secret_value('rut')
+    mi_clave = get_secret_value('bci_clave')
 
-        pasos_para_llegar_a_pagina_objetivo = [
-            # Login
-            {
-                'descripcion': 'Ingresar RUT', 'tipo_selector': 'id', 'valor_selector': 'rut_aux',
-                'accion': 'escribir', 'valor_input': mi_rut, 'pre_espera_segundos': 2
-            },
-            {
-                'descripcion': 'Ingresar contraseña', 'tipo_selector': 'id', 'valor_selector': 'clave',
-                'accion': 'escribir', 'valor_input': mi_clave
-            },
-            {
-                'descripcion': 'Click en botón de Ingresar', 'tipo_selector': 'xpath',
-                'valor_selector': '//button[normalize-space()="Ingresar" and @type="submit"]', 'accion': 'click'
-            },
-            {
-                'descripcion': 'Esperar carga post-login y posible redirección', 'accion': 'esperar',
-                'tiempo_segundos': 12
-            },
-            {
-                'descripcion': 'Esperar elemento clave del dashboard post-login', 'accion': 'esperar_elemento',
-                'tipo_selector': 'id', 'valor_selector': 'page',
-                'condicion': 'visible', 'tiempo_max_espera': 45
-            },
-            # Ir a la sección de Tarjetas y Mis movimientos
-            {
-                'descripcion': 'Click en enlace "Tarjetas"', 'tipo_selector': 'xpath',
-                'valor_selector': '//a[@title="Tarjetas" and normalize-space()="Tarjetas"]', 'accion': 'click'
-            },
-            {
-                'descripcion': 'Esperar a que "Mis movimientos" aparezca/sea clickeable', 'accion': 'esperar_elemento',
-                'tipo_selector': 'xpath', 'valor_selector': '//a[@title="Mis movimientos" and normalize-space()="Mis movimientos"]',
-                'condicion': 'element_to_be_clickable', 'tiempo_max_espera': 25 # Usar clickable
-            },
-            {
-                'descripcion': 'Click en enlace "Mis movimientos"', 'tipo_selector': 'xpath',
-                'valor_selector': '//a[@title="Mis movimientos" and normalize-space()="Mis movimientos"]',
-                'accion': 'click'
-            },
-            # Esperar a que el iframe de contenido exista antes de intentar cambiar a él
-            {
-                'descripcion': 'Esperar a que el iframe de contenido ("iframeContenido") esté presente',
-                'accion': 'esperar_elemento', 'tipo_selector': 'id', 'valor_selector': 'iframeContenido',
-                'condicion': 'presence', 'tiempo_max_espera': 30
-            },
-            # Descargar Excel
-            {
-                'descripcion': 'Cambiar al contexto del iframe "iframeContenido"',
-                'accion': 'switch_to_iframe', 'tipo_selector': 'id', 'valor_selector': 'iframeContenido'
-            },
-            {
-                'descripcion': 'Esperar botón "Descargar Excel" en la página actual', 'accion': 'esperar_elemento',
-                'tipo_selector': 'xpath',
-                'valor_selector': "//a[contains(@class, 'bci-wk-button-with-icon') and starts-with(normalize-space(.), 'Descargar Excel')]",
-                'condicion': 'element_to_be_clickable', 'tiempo_max_espera': 30
-            },
-            {
-                'descripcion': 'Click en "Descargar Excel"', 'tipo_selector': 'xpath',
-                'valor_selector': "//a[contains(@class, 'bci-wk-button-with-icon') and starts-with(normalize-space(.), 'Descargar Excel')]",
-                'accion': 'click'
-            },
-            {
-                'descripcion': 'Esperar a que la descarga del archivo comience/termine', 'accion': 'esperar',
-                'tiempo_segundos': 10
-            }
-        ]
-        resultado = realizar_acciones_bancarias(url_login_banco, mi_rut, mi_clave, pasos_para_llegar_a_pagina_objetivo, directorio_descargas)
-        print(f"\nResultado final del proceso: {resultado}")
+    pasos_para_llegar_a_pagina_objetivo = [
+        # Login
+        {
+            'descripcion': 'Ingresar RUT', 'tipo_selector': 'id', 'valor_selector': 'rut_aux',
+            'accion': 'escribir', 'valor_input': mi_rut, 'pre_espera_segundos': 2
+        },
+        {
+            'descripcion': 'Ingresar contraseña', 'tipo_selector': 'id', 'valor_selector': 'clave',
+            'accion': 'escribir', 'valor_input': mi_clave
+        },
+        {
+            'descripcion': 'Click en botón de Ingresar', 'tipo_selector': 'xpath',
+            'valor_selector': '//button[normalize-space()="Ingresar" and @type="submit"]', 'accion': 'click'
+        },
+        {
+            'descripcion': 'Esperar carga post-login y posible redirección', 'accion': 'esperar',
+            'tiempo_segundos': 12
+        },
+        {
+            'descripcion': 'Esperar elemento clave del dashboard post-login', 'accion': 'esperar_elemento',
+            'tipo_selector': 'id', 'valor_selector': 'page',
+            'condicion': 'visible', 'tiempo_max_espera': 45
+        },
+        # Ir a la sección de Tarjetas y Mis movimientos
+        {
+            'descripcion': 'Click en enlace "Tarjetas"', 'tipo_selector': 'xpath',
+            'valor_selector': '//a[@title="Tarjetas" and normalize-space()="Tarjetas"]', 'accion': 'click'
+        },
+        {
+            'descripcion': 'Esperar a que "Mis movimientos" aparezca/sea clickeable', 'accion': 'esperar_elemento',
+            'tipo_selector': 'xpath', 'valor_selector': '//a[@title="Mis movimientos" and normalize-space()="Mis movimientos"]',
+            'condicion': 'element_to_be_clickable', 'tiempo_max_espera': 25 # Usar clickable
+        },
+        {
+            'descripcion': 'Click en enlace "Mis movimientos"', 'tipo_selector': 'xpath',
+            'valor_selector': '//a[@title="Mis movimientos" and normalize-space()="Mis movimientos"]',
+            'accion': 'click'
+        },
+        # Esperar a que el iframe de contenido exista antes de intentar cambiar a él
+        {
+            'descripcion': 'Esperar a que el iframe de contenido ("iframeContenido") esté presente',
+            'accion': 'esperar_elemento', 'tipo_selector': 'id', 'valor_selector': 'iframeContenido',
+            'condicion': 'presence', 'tiempo_max_espera': 30
+        },
+        # Descargar Excel
+        {
+            'descripcion': 'Cambiar al contexto del iframe "iframeContenido"',
+            'accion': 'switch_to_iframe', 'tipo_selector': 'id', 'valor_selector': 'iframeContenido'
+        },
+        {
+            'descripcion': 'Esperar botón "Descargar Excel" en la página actual', 'accion': 'esperar_elemento',
+            'tipo_selector': 'xpath',
+            'valor_selector': "//a[contains(@class, 'bci-wk-button-with-icon') and starts-with(normalize-space(.), 'Descargar Excel')]",
+            'condicion': 'element_to_be_clickable', 'tiempo_max_espera': 30
+        },
+        {
+            'descripcion': 'Click en "Descargar Excel"', 'tipo_selector': 'xpath',
+            'valor_selector': "//a[contains(@class, 'bci-wk-button-with-icon') and starts-with(normalize-space(.), 'Descargar Excel')]",
+            'accion': 'click'
+        },
+        {
+            'descripcion': 'Esperar a que la descarga del archivo comience/termine', 'accion': 'esperar',
+            'tiempo_segundos': 10
+        }
+    ]
+    resultado = realizar_acciones_bancarias(url_login_banco, mi_rut, mi_clave, pasos_para_llegar_a_pagina_objetivo, directorio_descargas)
+    print(f"\nResultado final del proceso: {resultado}")
 
-    return {}
+    return directorio_descargas
