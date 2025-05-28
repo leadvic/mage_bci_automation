@@ -48,7 +48,7 @@ def load_data(*args, **kwargs):
             options_func.add_argument('--window-size=1920,1080')
             options_func.add_argument("--disable-blink-features=AutomationControlled")
 
-            driver_func = uc.Chrome(options=options_func, use_subprocess=True, enable_cdp_events=False)
+            driver_func = uc.Chrome(options=options_func, use_subprocess=True, enable_cdp_events=False, version_main=136)
             print("Navegador iniciado con undetected_chromedriver y configuración de descargas.")
             driver_func.get(url_banco_func)
             print(f"Navegando a: {url_banco_func}. Esperando posible desafío de Cloudflare...")

@@ -18,7 +18,6 @@ def transform(directorio, *args, **kwargs):
         # Leemos la primera hoja (sheet_name=0) y omitimos las primeras 12 filas.
         # La fila 13 (índice 12) se usará como cabecera.
         df = pd.read_excel(ruta_archivo_excel, sheet_name=0, skiprows=12)
-        print(f"Archivo leído correctamente. Columnas originales: {df.columns.tolist()}")
 
     except FileNotFoundError:
         print(f"Error: El archivo '{ruta_archivo_excel}' no fue encontrado.")
@@ -48,8 +47,6 @@ def transform(directorio, *args, **kwargs):
     else:
         df.rename(columns=mapeo_columnas, inplace=True)
 
-    print(f"Columnas después del renombrado: {df.columns.tolist()}")
-
     # Fecha: convertir a datetime y luego a date (solo la parte de la fecha)
     if 'fecha' in df.columns:
         try:
@@ -78,14 +75,15 @@ def transform(directorio, *args, **kwargs):
     # Tipo de tarjeta: extraer los últimos 4 caracteres numéricos y convertir a int
     if 'tipo_tarjeta' in df.columns:
         try:
-            # Extraer los últimos 4 dígitos del string
-            df['tipo_tarjeta'] = df['tipo_tarjeta'].astype(str).apply(
-                lambda x: int(re.search(r'(\d{4})$', x).group(1)) if re.search(r'(\d{4})$', x) else None
+            # Extraer los últimos 4 caracteres del string
+            # Asegurarse de que x sea un string y manejar casos donde podría ser None o no un string
+            df['tipo_tarjeta'] = df['tipo_tarjeta'].apply(
+                lambda x: str(x)[-4:] if pd.notna(x) and isinstance(x, str) and len(str(x)) >= 4 else (str(x) if pd.notna(x) and isinstance(x, str) else None)
             )
+            # Intentar convertir esos 4 caracteres a numérico. Si no son numéricos, resultará en NaN (o NA para Int64).
             df['tipo_tarjeta'] = pd.to_numeric(df['tipo_tarjeta'], errors='coerce').astype('Int64')
         except Exception as e:
             print(f"Advertencia: Error al procesar la columna 'tipo_tarjeta': {e}. Se dejará como está o con NaN.")
-
 
     # Monto: quitar comas (separador de miles) y convertir a int
     if 'monto' in df.columns:
@@ -95,5 +93,23 @@ def transform(directorio, *args, **kwargs):
             df['monto'] = pd.to_numeric(df['monto'], errors='coerce').astype('Int64')
         except Exception as e:
             print(f"Advertencia: Error al convertir la columna 'monto': {e}. Se dejará como está o con NaN.")
+
+    borrados_exitosamente = 0
+    errores_al_borrar = 0
+    for archivo_a_borrar in archivos_encontrados:
+        try:
+            archivo_a_borrar.unlink() # Borra el archivo
+            print(f"Archivo borrado: {archivo_a_borrar}")
+            borrados_exitosamente += 1
+        except OSError as e:
+            print(f"Error al borrar el archivo {archivo_a_borrar}: {e}")
+            errores_al_borrar += 1
+        except Exception as e_gen:
+            print(f"Error inesperado al borrar el archivo {archivo_a_borrar}: {e_gen}")
+            errores_al_borrar += 1
+    
+    print(f"\nResumen del borrado:")
+    print(f"  Archivos borrados exitosamente: {borrados_exitosamente}")
+    print(f"  Errores al borrar: {errores_al_borrar}")
 
     return df

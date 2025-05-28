@@ -35,13 +35,17 @@ blocks:
 - all_upstream_blocks_executed: true
   color: null
   configuration:
-    data_provider: duckdb
+    data_provider: postgres
     data_provider_profile: default
+    data_provider_schema: ps5gfk9xc0nc0s1
     dbt: {}
-    disable_query_preprocessing: false
+    disable_query_preprocessing: true
     export_write_policy: append
     limit: 1000
-    use_raw_sql: false
+    upstream_block_configuration:
+      transform_bci_data:
+        table_name: ''
+    use_raw_sql: true
   downstream_blocks: []
   executor_config: null
   executor_type: local_python
@@ -49,7 +53,7 @@ blocks:
   language: sql
   name: export_bci_data
   retry_config: null
-  status: updated
+  status: executed
   timeout: null
   type: data_exporter
   upstream_blocks:
